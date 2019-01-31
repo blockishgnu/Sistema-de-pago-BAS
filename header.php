@@ -2,7 +2,6 @@
 session_start();
 require_once 'config.php';
 require_once 'conect_comision.php';
-require_once 'conect_emision.php';
 
 if(isset($_SESSION['usuario'])){
   $usuario= $_SESSION['usuario'];
@@ -22,8 +21,7 @@ if(isset($_SESSION['usuario'])){
    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.quicksearch/2.2.1/jquery.quicksearch.js"></script>
    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.11.4/sweetalert2.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
-   <script src="https://js.braintreegateway.com/web/3.30.0/js/client.min.js"></script>
-   <script src="https://js.braintreegateway.com/web/3.30.0/js/paypal-checkout.min.js"></script>
+  
 
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/6.11.4/sweetalert2.min.css">

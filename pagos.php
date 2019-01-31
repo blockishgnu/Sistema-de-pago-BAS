@@ -1,6 +1,6 @@
 <?php
 
-require ("header.php");
+require("header.php");
 
 ?>
 <body>
@@ -11,4 +11,5 @@ require("mostrar_facturas.php");
 <?php
 
 require("footer.php")
+
  ?>

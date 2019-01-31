@@ -1,16 +1,7 @@
 <?php
-$consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administracion.valor_dolar = '' AND tipo_cambio.moneda = 'Dólares', 'Dolares', 'Pesos' ) AS MONEDAA, ca.kilometros, pa.tipo FROM administracion
-  			INNER JOIN grupos_certificados ON administracion.Vendedor = grupos_certificados.id_usuario AND administracion.id = grupos_certificados.id_certificado
-  			INNER JOIN tipo_cambio ON tipo_cambio.id_aseguradora = administracion.Aseguradora
-  			LEFT JOIN basagent_emision_dos.certificado_ambiental AS ca ON ca.folio = administracion.folio AND administracion.id_certificado_emision = ca.id_certificado
-  			LEFT JOIN basagent_emision_dos.producto_ambiental AS pa ON pa.id_producto_ambiental = ca.id_producto_ambiental
-  			WHERE Asegurado = '".$_SESSION['asegurado']."' AND STATUS IN ('4') AND ultimo = '1'
-  			ORDER BY grupos_certificados.id_incremental DESC , MONEDAA DESC , administracion.id ASC");
-
+require("consulta.php");
  ?>
-
-
-
+<!-- Contenedor de Pago-->
 <div class="container-pago">
   <div align="center" class="container-total">
  <b><p class="txt-total">TOTAL:</p><div id='resultado'>$0</div></b>
@@ -25,6 +16,7 @@ $consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administra
 
 </div>
 
+<!--Tabla con facturas-->
 <div class="scroll">
 <div class="container-table">
 
@@ -42,7 +34,6 @@ $consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administra
 </thead>
 
 <tbody>
-
   <?php
   $factura_auxiliar=0;
   $fecha_facturacion="";
@@ -54,10 +45,7 @@ $consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administra
       echo "</table><p align='center'>No hay facturas por pagar</p>";
    else {
        while ($registro_certificados = mysqli_fetch_array($consulta_certificados)) {
-
-
          $calculo_prima = 0;
-
 
               if($factura_auxiliar ==$registro_certificados['id_incremental'] || $factura_auxiliar==0){
 
@@ -73,16 +61,14 @@ $consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administra
 
               }else if($factura_auxiliar!=$registro_certificados['id_incremental']) {
 
-            $registro_pago=mysqli_query($con,"SELECT * FROM pagos WHERE id_factura='".$id_factura."'");
+                 $registro_pago=mysqli_query($con,"SELECT * FROM pagos WHERE id_factura='".$id_factura."'");
 
               if (mysqli_num_rows($registro_pago) == 0){
                 $estatus=0;
 
               }else{
                 $estatus=1;
-
               }
-
                 ?>
                 <tr>
                   <td><?=$id_factura;?></td>
@@ -109,9 +95,7 @@ $consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administra
                   echo "<td  class='reloj' align='center'><i class='fa fa-clock-o' aria-hidden='true'></i></td>";
                 }
                    ?>
-
                 </tr>
-
                 <?php
 
                 $factura_auxiliar = $registro_certificados['id_incremental'];
@@ -125,9 +109,6 @@ $consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administra
                       $moneda = "USD";
 
               }
-
-
-
        }
 
    }
@@ -139,10 +120,12 @@ $consulta_certificados = mysqli_query($conne,"SELECT DISTINCT * , IF( administra
 </div>
 
 </div>
+
+
 <script>
+  var checked = false;
+  var items;
 
-
-    var checked = false;
 
 $('.check-all').on('click',function(){
 
@@ -179,9 +162,7 @@ $('input[type=checkbox]:checked').each(function(){
   var cantidad=[];
   var id_folio=0;
   var moneda="";
-
   var list;
-
 
 $('.pago').on('click',function(){
    total = 0;
@@ -204,6 +185,8 @@ $('.pago').on('click',function(){
       $(this).closest('td').siblings().each(function(){
         result[i] = $(this).text();
 
+        //Obtener folio factura y monto
+
         if(i==0){
           id[a]=result[i];
         }
@@ -225,6 +208,7 @@ $('.pago').on('click',function(){
 
       });
 
+    //Comprobar Moneda
       if(moneda!=aux_mon){
         this.checked = false;
         if(aux_not==0){
@@ -244,6 +228,7 @@ $('.pago').on('click',function(){
 
     });
 
+
 document.getElementById('resultado').innerHTML = '$ '+ total+ ' '+moneda;
 
 //Obtener items JSON
@@ -257,12 +242,20 @@ for (var b = 0; b < id.length; b++) {
 };
 
 json = JSON.stringify(list);
-var items = JSON.parse(json);
+items = JSON.parse(json);
 
 console.log(items);
 
 $('#paypal-button-container').empty();
 
+button_PayPal();
+
+});
+
+//Boton de PayPal
+function button_PayPal(){
+
+//Paypal renderizar boton
 paypal.Button.render({
 // Set your environment
 env: 'sandbox', // sandbox | production
@@ -298,7 +291,6 @@ sandbox: 'AQEeGJLkV6D_ayxJlHpvhV5bxIOWKz6o2zIlvigiX7yDy8OkZVBNG4Yxprt_y_If_Yo_xj
 production: '<insert production client id>'
 },
 
-
 payment: function (data, actions) {
 return actions.payment.create({
 payment: {
@@ -321,11 +313,12 @@ onAuthorize: function (data, actions) {
 return actions.payment.execute()
 .then(function () {
 
+//Insertar datos de pago en DB
 var id_folio=0;
   $.ajax({
      type:'POST',
      url: 'pago.php',
-     data: {id_usuario:<?=$id_usuario?>,total:total},
+     data: {id_usuario:<?=$id_usuario?>,moneda:moneda,total:total},
      success:function(data){
      id_folio=data;
      if(id_folio!=0){
@@ -336,21 +329,31 @@ var id_folio=0;
           data: {id_usuario:<?=$id_usuario?>,id_factura:id[a],cantidad:cantidad[a],id_folio:id_folio},
           success:function(data){
           if(data==0){
-            location.reload();
+
           }else{
             alert("Error");
           }
                },
                error:function(data){
-                //registro fallido
-                /*$.gritter.add({
-                 title: 'ERROR!',
-                 text: 'Registro fallido'
-               });*/
+
                }
              });
 
      }
+
+     $.ajax({
+        type:'POST',
+        url: 'generarPDF.php',
+        data: {folio:id_folio,facturas:items},
+        success:function(data){
+
+             },
+             error:function(data){
+               alert("Error");
+             }
+           })
+
+           location.reload();
 
    }else{
      alert("error");
@@ -359,11 +362,6 @@ var id_folio=0;
 
           },
           error:function(data){
-           //registro fallido
-           /*$.gritter.add({
-            title: 'ERROR!',
-            text: 'Registro fallido'
-          });*/
           }
         });
 
@@ -374,6 +372,9 @@ var id_folio=0;
         showConfirmButton: false,
         timer: 2500
       })
+
+
+
 });
 },
 onCancel: function(data, actions) {
@@ -382,92 +383,15 @@ onCancel: function(data, actions) {
 
 onError: function(error) {
   if(total==0){
-    Swal.fire( "Error" ,  "Selecciona facturas para pagar" ,  "error" );
+    Swal.fire( "Error" ,  "Debes seleccionar facturas para pagar" ,  "error" );
   }else
     Swal.fire( "Error" ,  "Ocurrio un error al procesar su pago" ,  "error" );
     console.log(error);
 }
 }, '#paypal-button-container');
-
-
-});
-
-
-//Paypal renderizar boton
-
-paypal.Button.render({
-// Set your environment
-env: 'sandbox', // sandbox | production
-
-// Specify the style of the button
-style: {
-layout: 'vertical',  // horizontal | vertical
-size:   'medium',    // medium | large | responsive
-shape:  'rect',      // pill | rect
-color:  'blue'       // gold | blue | silver | white | black
-},
-
-// Specify allowed and disallowed funding sources
-//
-// Options:
-// - paypal.FUNDING.CARD
-// - paypal.FUNDING.CREDIT
-// - paypal.FUNDING.ELV
-funding: {
-allowed: [
-paypal.FUNDING.CARD,
-paypal.FUNDING.CREDIT
-],
-disallowed: []
-},
-
-// Enable Pay Now checkout flow (optional)
-commit: true,
-
-// PayPal Client IDs - replace with your own
-// Create a PayPal app: https://developer.paypal.com/developer/applications/create
-client: {
-sandbox: 'AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R',
-production: '<insert production client id>'
-},
-
-payment: function (data, actions) {
-return actions.payment.create({
-payment: {
-  transactions: [
-    {
-      amount: {
-        total: total,
-        currency: 'MXN'
-      }
-
-    }
-
-  ]
 }
-});
-},
 
-
-onAuthorize: function (data, actions) {
-return actions.payment.execute()
-.then(function () {
-
-  window.alert('Pago Completado');
-});
-},
-onCancel: function(data, actions) {
-      Swal.fire( "Cancelada" ,  "Transaccion cancelada por el usuario" ,  "error" );
-},
-
-onError: function(error) {
-  if(total==0){
-    Swal.fire( "Error" ,  "Selecciona facturas para pagar" ,  "error" );
-  }else
-    Swal.fire( "Error" ,  "Ocurrio un error al procesar su pago" ,  "error" );
-}
-}, '#paypal-button-container');
-
+$(button_PayPal());
 
 $(function () {
 

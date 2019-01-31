@@ -12,13 +12,7 @@ if(isset($_SESSION['usuario'])){
 $navegador = $_SERVER['HTTP_USER_AGENT'];
 $deshabilitar_campos = " disabled";
 
-//validación de navegadores
-if(strpos($navegador,"Firefox") || strpos($navegador,"Chrome") || strpos($navegador,"Safari"))//strpos($navegador,"Mobile") <-- Para bloquear los mobiles tambien -->
-{
-	$deshabilitar_campos = "";
-	echo "<input type='hidden' id='navegador' value='0'>";
-}else
-	echo "<input type='hidden' id='navegador' value='1'>";
+
 
 ?>
 <head>
