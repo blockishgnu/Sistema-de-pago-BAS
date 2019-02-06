@@ -20,7 +20,7 @@ require("consulta.php");
 <div class="scroll">
 <div class="container-table">
 
-<table>
+<table class="facturas">
   <thead>
   <tr>
     <th>Folio de Factura</th>
@@ -47,19 +47,19 @@ require("consulta.php");
        while ($registro_certificados = mysqli_fetch_array($consulta_certificados)) {
          $calculo_prima = 0;
 
-              if($factura_auxiliar ==$registro_certificados['id_incremental'] || $factura_auxiliar==0){
+              if($factura_auxiliar ==$registro_certificados['facturareporte'] || $factura_auxiliar==0){
 
                 $id_factura=$registro_certificados['facturareporte'];
-                $factura_auxiliar = $registro_certificados['id_incremental'];
+                $factura_auxiliar = $registro_certificados['facturareporte'];
                 $fecha_facturacion = $registro_certificados['fecha_facturacion'];
                 $prima += $registro_certificados['PrimaTotal'];
                 $descripcion ++;
-                if ($registro_certificados['MONEDAA'] == "Pesos")
+                if ($registro_certificados['Moneda'] == "Pesos")
                       $moneda = "MXN";
-                if ($registro_certificados['MONEDAA'] == "Dolares" || $registro_certificados['facturareporte']==26739)
+                if ($registro_certificados['Moneda'] == "Dolares" || $registro_certificados['facturareporte']==26739)
                       $moneda = "USD";
 
-              }else if($factura_auxiliar!=$registro_certificados['id_incremental']) {
+              }else if($factura_auxiliar!=$registro_certificados['facturareporte']) {
 
                  $registro_pago=mysqli_query($con,"SELECT * FROM pagos WHERE id_factura='".$id_factura."'");
 
@@ -72,7 +72,13 @@ require("consulta.php");
                 ?>
                 <tr>
                   <td><?=$id_factura;?></td>
-                  <td> Esta factura contiene: <?=$descripcion?> certificados</td>
+                  <td>
+                    <button type="button" value="<?=$id_factura;?>" onclick="Mostrar(<?=$id_factura;?>);" class="btn btn-primary" data-toggle="modal" data-target="#Modal_Certificados">
+                    ver
+                  </button>
+                    Esta factura contiene: <?=$descripcion?> certificados
+
+                    </td>
                   <td><?=$fecha_facturacion?></td>
                   <?php
                   if($estatus==0){
@@ -82,13 +88,13 @@ require("consulta.php");
                 }
                    ?>
                   <td><?=$moneda?></td>
-                  <td>$ <?= number_format(ceil($prima), 0, ".", ",");?></td>
+                  <td>$ <?= number_format($prima, 2, ".", ",");?></td>
 
                   <?php
                   if($estatus==0){
                   ?>
                   <td align='center'>
-                    <input type='checkbox' class='pago' value='<?=ceil($prima);?>'  ".$check.">
+                    <input type='checkbox' class='pago' value='<?=  number_format($prima,2,".","");?>'  ".$check.">
                   </td>
                   <?php
                 }else{
@@ -98,14 +104,14 @@ require("consulta.php");
                 </tr>
                 <?php
 
-                $factura_auxiliar = $registro_certificados['id_incremental'];
+                $factura_auxiliar = $registro_certificados['facturareporte'];
                 $id_factura=$registro_certificados['facturareporte'];
                 $descripcion=1;
                 $fecha_facturacion = $registro_certificados['fecha_facturacion'];
                 $prima = $registro_certificados['PrimaTotal'];
-                if ($registro_certificados['MONEDAA'] == "Pesos")
+                if ($registro_certificados['Moneda'] == "Pesos")
                       $moneda = "MXN";
-                if ($registro_certificados['MONEDAA'] == "Dolares" || $registro_certificados['facturareporte']==26739)
+                if ($registro_certificados['Moneda'] == "Dolares" || $registro_certificados['facturareporte']==26739)
                       $moneda = "USD";
 
               }
@@ -119,6 +125,34 @@ require("consulta.php");
 </div>
 </div>
 
+
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="Modal_Certificados" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <h3 class="modal-title" id="exampleModalLongTitle">Certificados</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="box-body table-responsive">
+         <table id="tabla_certificados" class="table_cert" style="background-color: white;
+           color: black;
+           height: 50px;
+           font-size: 15px;">
+         </table>
+         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 
@@ -200,7 +234,7 @@ $('.pago').on('click',function(){
 
         if(i==5){
           var aux_cant = result[i];
-          cantidad[a]=aux_cant.replace(/[^0-9]+/g, '');
+          cantidad[a]=aux_cant.replace(/[^0-9.]+/g, '');
 
           ++a;
         }
@@ -219,7 +253,9 @@ $('.pago').on('click',function(){
           --a;
         }
       }else{
-        total+=parseFloat($(this).attr('value'));
+        total+=Number($(this).attr('value'));
+
+
       }
 
       console.log(moneda);
@@ -228,8 +264,9 @@ $('.pago').on('click',function(){
 
     });
 
-
-document.getElementById('resultado').innerHTML = '$ '+ total+ ' '+moneda;
+     total=roundOf(total,2)
+     console.log(total);
+document.getElementById('resultado').innerHTML = '$ '+ total.toFixed(2)+ ' '+moneda;
 
 //Obtener items JSON
 for (var b = 0; b < id.length; b++) {
@@ -254,6 +291,11 @@ button_PayPal();
 
 //Boton de PayPal
 function button_PayPal(){
+
+
+
+
+
 
 //Paypal renderizar boton
 paypal.Button.render({
@@ -292,6 +334,27 @@ production: '<insert production client id>'
 },
 
 payment: function (data, actions) {
+
+ aux_to=0;
+  for(a=0;a<id.length;a++){
+    $.ajax({
+       type:'POST',
+       url: 'confirmar.php',
+       data: {id_usuario:<?=$id_usuario?>,id_factura:id[a],cantidad:cantidad[a]},
+       success:function(data){
+       if(data==0){
+
+       }else{
+         location.reload();
+       }
+            },
+            error:function(data){
+
+            }
+          });
+          ++a;
+
+  }
 return actions.payment.create({
 payment: {
   transactions: [
@@ -299,7 +362,7 @@ payment: {
       amount: {
 
         total: total,
-        currency: moneda
+        currency: moneda,
       },
       description: 'Pago facturas BAS Agentes',
       item_list: items
@@ -347,13 +410,15 @@ var id_folio=0;
         data: {folio:id_folio,facturas:items},
         success:function(data){
 
+          location.reload();
+
              },
              error:function(data){
                alert("Error");
              }
            })
 
-           location.reload();
+
 
    }else{
      alert("error");
@@ -397,4 +462,37 @@ $(function () {
 
   $('#search').quicksearch('table tbody tr');
 });
+
+//Mostrar Certificados de la factura
+function Mostrar(factura){
+$("#tabla_certificados").html("");
+
+  $.ajax({
+        type:'POST',
+        url: 'buscarcertificados.php',
+        data: {factura:factura},
+        success:function(data){
+     $("#tabla_certificados").html(data);
+             },
+             error:function(data){
+              //registro fallido
+              alert("Registro fallido");
+             }
+           });
+           $('#Modal_Certificados').on('shown.bs.modal', function () {
+
+
+             $('#myInput').trigger('focus')
+           });
+}
+
+function roundOf(n, p) {
+    const n1 = n * Math.pow(10, p + 1);
+    const n2 = Math.floor(n1 / 10);
+    if (n1 >= (n2 * 10 + 5)) {
+        return (n2 + 1) / Math.pow(10, p);
+    }
+    return n2 / Math.pow(10, p);
+}
+
 </script>

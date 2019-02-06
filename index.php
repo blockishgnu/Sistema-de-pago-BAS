@@ -43,6 +43,7 @@ $deshabilitar_campos = " disabled";
 				 $_SESSION['nombre'] = $row[1];
 				 $_SESSION['usuario']=$row[2];
 				 $_SESSION['asegurado']=$row[4];
+         $_SESSION['mail']=$row[5];
 
 				 header ("Location: pagos.php");
 

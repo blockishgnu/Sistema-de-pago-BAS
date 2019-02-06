@@ -16,8 +16,7 @@ $mail->Password = "hx69wEid,n7x";
 $mail->From = "envio_certificados@basagentes.mx";
 $mail->FromName = utf8_decode("Sistema de Pago");
 $mail->Subject = "Confirmacion de pago y proceso de acreditacion";
-$mail->AddAddress("blockishgnu@gmail.com","Arturo");
-//$mail->AddAddress("programacion2@hellodigital.mx","Arturo");
+$mail->AddAddress($correo,$nombre);
 //$mail->AddCC("usuariocopia@correo.com");
 $mail->AddBCC("programacion2@hellodigital.mx","Arturo");
 
@@ -80,7 +79,7 @@ $mail->MsgHTML("
 				<td>
 					<div class='texto'>
 						Hola, se ha realizado el pago correctamente, Folio: <strong>".$folio."</strong>
-						con un costo total de $ <strong>".number_format(ceil($total), 0, ".", ",")."</strong> el cual esta en proceso de acreditacion. <br/><br/>
+						con un costo total de $ <strong>".number_format(ceil($total), 2, ".", ",")."</strong> el cual esta en proceso de acreditacion. <br/><br/>
 						Contacte al vendedor para mas informacion.
 					</div>
 				</td>

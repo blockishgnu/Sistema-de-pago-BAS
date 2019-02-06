@@ -12,8 +12,7 @@
 
  return $conne;
 
-function CloseConne($conne)
- {
+function CloseConne($conne){
  $conne -> close();
  }
 

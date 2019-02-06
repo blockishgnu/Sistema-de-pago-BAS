@@ -5,6 +5,9 @@ require('config.php');
 
 session_start();
 $usuario= $_SESSION['asegurado'];
+$correo= $_SESSION['mail'];
+$nombre=$_SESSION['nombre'];
+
 
 $folio=$_POST['folio'];
 $items=$_POST['facturas'];
